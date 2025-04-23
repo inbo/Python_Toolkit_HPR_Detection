@@ -1,0 +1,87 @@
+# Python-specific
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+sdist/
+venv/
+env/
+.venv/
+Lib/
+Include/
+Scripts/
+site-packages/
+
+# Byte-compiled / optimized / DLL files (C extensions)
+*.pyd
+*.so
+*.dll
+
+# Test and coverage reports
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Distribution / packaging
+*.whl
+*.tar.gz
+*.egg
+
+# IDE-specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+*.ipnb_checkpoints/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# GIS and Data Specific (adjust as needed)
+*.shp.xml      # Metadata for shapefiles
+*.aux.xml      # GDAL auxiliary files
+*.dbf.xml      # XML metadata for DBF files
+*.cpg          # Shapefile code page file
+*.prj          # Projection file (often small, but can be ignored if managed elsewhere)
+*.lock         # File locks
+*.gdb/         # Entire Esri File Geodatabase (can be large!)
+*.mdb          # Older Microsoft Access Database (often used in GIS)
+*.sqlite       # SQLite databases (consider if they hold large or temporary data)
+*.qgs.backup* # QGIS project backup files
+*.qgz.backup* # QGIS zipped project backup files
+*.qlr.backup* # QGIS layer definition backup files
+*.rdata        # R workspace data if you're using R with your GIS project
+*.geojson      # GeoJSON files (consider if dynamically generated or very large)
+*.kml          # Keyhole Markup Language files
+*.kmz          # Compressed KML files
+*.gpkg-wal     # GeoPackage write-ahead log
+*.parquet      # Apache Parquet files (often used for large tabular data)
+*.gpkg         # GeoPackage files (consider if they hold large or frequently changing data)
+*.lyr          # ArcGIS Layer files (binary format, often not ideal for version control)
+*.lyrx         # ArcGIS Layer Package files (can contain data)
+*.mxd.backup* # ArcGIS Map Document backup files (older format)
+*.aprx.backup* # ArcGIS Pro Project backup files
+*.stylex       # ArcGIS Pro Style files
+*.rulepackage  # ArcGIS Rule Package files
+*.sld          # Styled Layer Descriptor (often XML, but consider if auto-generated)
+*.qml          # QGIS Style Layer files
+*.vrt          # GDAL Virtual Format files (XML description of raster or vector data)
+*.ovr          # GDAL overview files (pyramids for rasters)
+*.hdr          # ESRI BIL/BIP/BSQ Header file (for raster data)
+*.tfw          # World file for georeferencing raster data
+*.xml          # Generic XML files (can include metadata, consider if auto-generated)
+*.csw          # Catalog Service for the Web files
+*.wms          # Web Map Service capabilities documents
+*.wfs          # Web Feature Service capabilities documents
+*.wcs          # Web Coverage Service capabilities documents
+
+# Temporary files and logs
+*.log
+*.tmp
+temp/
+tmp/
