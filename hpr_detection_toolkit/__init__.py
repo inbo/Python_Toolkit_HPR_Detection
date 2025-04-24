@@ -14,7 +14,7 @@ executed when the package is imported.
 __author__ = "Bob Oeyen"
 __email__ = "bob.oeyen@outlook.com"
 
-__version__ = "0.1.0"  Important for package management
+__version__ = "0.1.0"  # Important for package management
 
 '''try:
     import importlib.metadata as importlib_metadata
@@ -37,8 +37,8 @@ if os.path.isfile(toml_file):
 # Be careful with this; keep it lean.  Avoid lengthy operations here.
 # Example:
 
-import logging
-logging.basicConfig(level=logging.INFO)
+#import logging
+#logging.basicConfig(level=logging.INFO)
 #logging.setLoggerClass(ToolkitHPRLogger)
 #_setup_logger(name="ToolkitDetectionHPR")
 

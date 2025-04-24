@@ -3,6 +3,7 @@
 import cv2
 import numpy as np
 from shapely import Point, LineString
+from shapely.affinity import affine_transform
 #Local applications
 
 Point.__neg__ = lambda self: Point(-self.x, -self.y)
@@ -132,41 +133,21 @@ class LineSegmentDetector():
                                                 }
                                 }
         self._config = self.merge_config(config, self.__default_config)
+        self._line_segments = None
+        self._binary_image = None
 
-    def set_binary_raster(self, binary_raster):
-        self._binary_raster = binary_raster
+    def set_binary_raster(self, binary_image):
+        #binary_raster -- numpy array of int
+        if binary_image.dtype != np.uint8:
+            raise TypeError('The dtype of the binary image should be numpy.uint8')
+        self._binary_image = binary_image
 
     def set_config(self, new_config):
         self._config = merge_config(new_config, self._config)
 
-    def merge_config(self, user_config, default_config):
-        """
-        Merge the user configuration dictionary with the default configuration dictionary recursively.
-
-        Parameters
-        ----------
-        user : dict
-            The user configuration dictionary.
-        default : dict
-            The default configuration dictionary.
-
-        Returns
-        -------
-        dict
-            The merged configuration dictionary.
-
-        """
-        if isinstance(user_config, dict) and isinstance(default_config, dict):
-            for key, default_value in default_config.items():
-                if key not in user_config:
-                    user_config[key] = default_value
-                else:
-                    user_config[key] = self.merge_config(user_config[key], default_value)
-        return user_config
-
-    def run(self, merge_lines=True):
+    def run(self, merge_lines=False):
         HLP_config = self._config['Hough lines']
-        line_segments = cv2.HoughLinesP(self._binary_raster, HLP_config['rho_resolution'], HLP_config['theta_resolution'],
+        line_segments = cv2.HoughLinesP(self._binary_image, HLP_config['rho_resolution'], HLP_config['theta_resolution'],
             threshold=HLP_config['threshold'], minLineLength=HLP_config['minLineLength'], maxLineGap=HLP_config['maxLineGap'])
 
         # remove unused dimension in numpy array
@@ -179,8 +160,10 @@ class LineSegmentDetector():
         if merge_lines:
             line_segments = self.merge_similar_line_segments(line_segments, self._config['rho_tolerance'], self._config['theta_tolerance'])
 
-        return line_segments
+        self._line_segments = line_segments
 
+    def get_line_segments(self):
+        return self._line_segments
 
     def merge_similar_line_segments(self,line_segments, rho_tolerance, theta_tolerance):
         """
@@ -258,4 +241,27 @@ class LineSegmentDetector():
 
         return merged_lines
 
-    
+    def merge_config(self, user_config, default_config):
+        """
+        Merge the user configuration dictionary with the default configuration dictionary recursively.
+
+        Parameters
+        ----------
+        user : dict
+            The user configuration dictionary.
+        default : dict
+            The default configuration dictionary.
+
+        Returns
+        -------
+        dict
+            The merged configuration dictionary.
+
+        """
+        if isinstance(user_config, dict) and isinstance(default_config, dict):
+            for key, default_value in default_config.items():
+                if key not in user_config:
+                    user_config[key] = default_value
+                else:
+                    user_config[key] = self.merge_config(user_config[key], default_value)
+        return user_config
