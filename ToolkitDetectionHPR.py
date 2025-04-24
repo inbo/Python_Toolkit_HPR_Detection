@@ -1,19 +1,7 @@
 #Standard libraries
-import math
-import os
 #Third party libraries
-import rasterio
-from rasterio.transform import xy
-from rasterio import plot as rasterio_plot
-from rasterio import warp as rasterio_warp  #calculate_default_transform, reproject, Resampling
-import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-import cartopy.crs as ccrs
-from scipy.ndimage import gaussian_filter
-import geopandas
-import shapely
-from shapely import affinity
 from shapely import Point, LineString
 #Local applications
 
