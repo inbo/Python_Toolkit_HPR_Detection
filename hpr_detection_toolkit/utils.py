@@ -3,10 +3,8 @@ import math
 import os
 #Third party libraries
 import rasterio
-from rasterio.transform import xy
-from rasterio import plot as rasterio_plot
-from rasterio import warp as rasterio_warp  #calculate_default_transform, reproject, Resampling
-import matplotlib.pyplot as plt
+import rasterio.warp
+import rasterio.vrt
 import cv2
 import numpy as np
 import cartopy.crs as ccrs
@@ -27,7 +25,7 @@ def open_raster_data(filename, target_crs=None):
     if target_crs is not None and raster.crs != target_crs:
         print(f"Reprojecting raster data to {target_crs}...")
         
-        transform, width, height = rasterio_warp.calculate_default_transform(
+        transform, width, height = rasterio.warp.calculate_default_transform(
             raster.crs, target_crs, raster.width, raster.height, *raster.bounds
         )
         kwargs = raster.meta.copy()
@@ -41,14 +39,14 @@ def open_raster_data(filename, target_crs=None):
         filename_base, filename_ext = os.path.splitext(filename)
         with rasterio.open(f'{filename_base}-reprojected{filename_ext}', 'w', **kwargs) as output_file:
             for i in range(1, raster.count + 1):
-                rasterio_warp.reproject(
+                rasterio.warp.reproject(
                     source=rasterio.band(raster, i),
                     destination=rasterio.band(output_file, i),
                     src_transform=raster.transform,
                     src_crs=raster.crs,
                     dst_transform=transform,
                     dst_crs=target_crs,
-                    resampling=rasterio_warp.Resampling.nearest  # Choose an appropriate resampling
+                    resampling=rasterio.warp.Resampling.nearest  # Choose an appropriate resampling
                 )
         raster.close()
         raster = rasterio.open(f'{filename_base}-reprojected{filename_ext}')
