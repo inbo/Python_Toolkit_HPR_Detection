@@ -24,6 +24,9 @@ def open_raster_data(filename, target_crs=None):
 
     if target_crs is not None and raster.crs != target_crs:
         print(f"Reprojecting raster data to {target_crs}...")
+        raster = rasterio.vrt.WarpedVRT(raster, crs=target_crs)
+        
+        """print(f"Reprojecting raster data to {target_crs}...")
         
         transform, width, height = rasterio.warp.calculate_default_transform(
             raster.crs, target_crs, raster.width, raster.height, *raster.bounds
@@ -49,7 +52,7 @@ def open_raster_data(filename, target_crs=None):
                     resampling=rasterio.warp.Resampling.nearest  # Choose an appropriate resampling
                 )
         raster.close()
-        raster = rasterio.open(f'{filename_base}-reprojected{filename_ext}')
+        raster = rasterio.open(f'{filename_base}-reprojected{filename_ext}')"""
         print(f"Raster CRS after reprojection: {raster.crs}")
 
     else:
