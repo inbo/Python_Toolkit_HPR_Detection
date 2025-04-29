@@ -2,19 +2,77 @@
 from typing import Optional
 #Third party libraries
 import numpy as np
+import geopandas
 #Local applications
+from Python_Toolkit_HPR_Detection.hpr_detection_toolkit.line_detection import LineSegmentDetector
+from Python_Toolkit_HPR_Detection.hpr_detection_toolkit import utils
 
-class DitchesDetector():
+class HprDitchDetector():
     def __init__(self):
-        pass
+        self._LSD = LineSegmentDetector()
+        self._plot = None
+        self._relief = None
+        self._crs = None
+        self._ditches = None
+        self._buffer_zone = None
+        self._hpr_fraction = None
 
-    def has_plot_ditches(self, plot, relief):
-        pass
+    def begin(self, plot, relief):
+        self._plot = plot
+        self._relief = relief
+        self._crs = relief.crs
 
-    def select_image_background(
+    def run(self, threshold_factor=3., merge_lines=False):
+        self._ditches = self._detect_ditches_in_plot(threshold_factor=threshold_factor, merge_lines=merge_lines)
+        self._buffer_zone = self._buffer_ditches(self._ditches)
+        self._hpr_fraction = self._buffer_zone.iloc[0].geometry.area / self._plot.iloc[0].geometry.area
+
+    def end(self):
+        self._plot = None
+        self._relief = None
+        self._crs = None
+        self._ditches = None
+        self._buffer_zone = None
+        self._hpr_fraction = None
+
+    def get_hpr_fraction(self):
+        return self._hpr_fraction
+
+    def get_ditches(self):
+        return self._ditches
+
+    def get_buffer_zone(self):
+        return self._buffer_zone
+
+    def _detect_ditches_in_plot(self, relief=None, threshold_factor=3., merge_lines=False):
+        if relief is None:
+            relief = self._relief
+
+        image = relief.read(1)
+        mask_background = self._select_image_background(image, threshold_factor=threshold_factor)
+        image_masked = np.where(mask_background, 0., image)
+        image_binary = np.where(mask_background, image_masked, 1.)
+
+        self._LSD.set_binary_raster(image_binary.astype(np.uint8))
+        self._LSD.run(merge_lines=merge_lines)
+        line_segments = self._LSD.get_line_segments()
+
+        line_segments_geometry = utils.pixel_to_georef(line_segments, relief.transform.to_shapely())
+        return geopandas.GeoDataFrame(geometry=line_segments_geometry, crs=self._crs)
+
+    def _buffer_ditches(self, lines, plot=None, buffer_distance=30.):
+        if plot is None:
+            plot = self._plot
+
+        buffer_gdf = lines.copy()  # Create a copy to store the buffer geometries
+        buffer_gdf['geometry'] = lines.geometry.buffer(buffer_distance) # directly assign
+        buffer_union_gdf = geopandas.GeoDataFrame(geometry=[buffer_gdf.union_all()], crs=self._crs)        
+        return geopandas.overlay(buffer_union_gdf, plot, how='intersection')
+
+    def _select_image_background(
         self, image, 
         background_estimation_method : str='median', 
-        threshold_factor : float=2., 
+        threshold_factor : float=3., 
         include_high : bool=True, 
         include_low : bool=True, 
         return_background_estimate : bool=False,
@@ -29,7 +87,7 @@ class DitchesDetector():
             The input image (grayscale).
         background_estimation_method : str, default='mean': 
             The method used to estimate the background. Options are: 'mean', 'median', 'gaussian'.
-        threshold : float, default=2.
+        threshold : float, default=3.
             The number of standard deviations by which a pixel's value must differ from the 
             background to be considered a high-value pixel.
         gaussian_sigma : float, optional, default=None: 
