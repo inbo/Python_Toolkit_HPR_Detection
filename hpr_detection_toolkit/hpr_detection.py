@@ -3,71 +3,154 @@ from typing import Optional
 #Third party libraries
 import numpy as np
 import geopandas
+import shapely
+from scipy.ndimage import gaussian_filter
 #Local applications
-from Python_Toolkit_HPR_Detection.hpr_detection_toolkit.line_detection import LineSegmentDetector
-from Python_Toolkit_HPR_Detection.hpr_detection_toolkit import utils
+from .line_detection import LineSegmentDetector
+from . import utils
+
 
 class HprDitchDetector():
-    def __init__(self):
+    """ Detect linear structures in a raster map 
+    based on microrelief within a plot of land """
+    def __init__(self, relief, config={}):
+        """
+        Attributes
+        ----------
+        relief : rasterio.DataReader-like object
+            The raster image in gray-scale where linear structures in high or low values
+            represent ditches in the landplot. Can be microrelief or processed relief map
+            such as the map made by VITO.
+        config : dict, default={}
+            User's configuration for the hpr ditch detection.
+            When empty, the default configuration is used.
+            Otherwise the default configuration is overwritten
+            for key words present in the user's configuration.
+        """
         self._LSD = LineSegmentDetector()
-        self._plot = None
-        self._relief = None
-        self._crs = None
-        self._ditches = None
-        self._buffer_zone = None
-        self._hpr_fraction = None
-
-    def begin(self, plot, relief):
-        self._plot = plot
         self._relief = relief
         self._crs = relief.crs
 
-    def run(self, threshold_factor=3., merge_lines=False):
-        self._ditches = self._detect_ditches_in_plot(threshold_factor=threshold_factor, merge_lines=merge_lines)
-        self._buffer_zone = self._buffer_ditches(self._ditches)
-        self._hpr_fraction = self._buffer_zone.iloc[0].geometry.area / self._plot.iloc[0].geometry.area
+        self.__default_config = {'merge_lines': False,
+                                 'filter_background': {'threshold_factor': 3.,
+                                                       'background_estimation_method': 'median',
+                                                       'include_high': False, 
+                                                       'include_low': True, 
+                                                       'gaussian_sigma': None,
+                                                       },
+                                 'buffer_zone': {'buffer_distance': 30.}
+                                }
+        self._config = utils.merge_config(config, self.__default_config)
 
-    def end(self):
-        self._plot = None
-        self._relief = None
-        self._crs = None
+    def process(self, landplot):
+        """
+        Detect ditches and determine the percentage of hpr covered land
+
+        Parameters
+        ----------
+        landplot : geopandas.DataFrame
+            Georeferenced list holding the landplot
+        """
+
+        # Make sure results of previous processing runs are erased
         self._ditches = None
         self._buffer_zone = None
         self._hpr_fraction = None
 
+        # Perform necessary processes
+        self._ditches = self._detect_ditches_in_plot(landplot, relief=self._relief, merge_lines=self._config['merge_lines'])
+        self._buffer_zone = self._buffer_ditches(self._ditches, landplot, **self._config['buffer_zone'])
+        self._hpr_fraction = self._buffer_zone.iloc[0].geometry.area / landplot.iloc[0].geometry.area
+
     def get_hpr_fraction(self):
+        """
+        return the percentage of landplot surface that is covered by the buffer zone
+
+        Returns
+        -------
+        hpr_fraction : float
+        """
         return self._hpr_fraction
 
-    def get_ditches(self):
-        return self._ditches
+    def get_ditches(self, multilinestring=False):
+        """
+        return the location of ditches represented by line segments
+
+        Returns
+        -------
+        ditches : list of shapely.LineString
+        """
+        if not multilinestring:
+            return self._ditches
+        else:
+            return geopandas.GeoDataFrame(geometry=[shapely.MultiLineString(list(self._ditches.geometry))], crs=self._crs)
 
     def get_buffer_zone(self):
+        """
+        return the buffer zone around the ditches
+
+        Returns
+        -------
+        buffer_zone : geopandas.DataFrame
+        """
         return self._buffer_zone
 
-    def _detect_ditches_in_plot(self, relief=None, threshold_factor=3., merge_lines=False):
-        if relief is None:
-            relief = self._relief
+    def _detect_ditches_in_plot(self, landplot, relief, merge_lines=False):
+        """
+        detected ditches (linear structures) in the relief raster image 
 
-        image = relief.read(1)
-        mask_background = self._select_image_background(image, threshold_factor=threshold_factor)
+        Parameters
+        ----------
+        landplot : geopandas.DataFrame
+            Georeferenced list holding the landplot
+        relief : shapely.DataReader-like object
+            The raster image in gray-scale where linear structures in high or low values
+            represent ditches in the landplot. Can be microrelief or processed relief map
+            such as the map made by VITO.
+        merge_lines : boolean, default=False
+            If true, line segments with a similar line equation and in the vicinity of
+            each other or merged into one single line segment.
+
+        Returns
+        -------
+        geopandas.DataFrame
+            Georeferenced list of all the detected line segments
+        """
+
+        clipped_relief = utils.clip_raster(relief, landplot.iloc[0].geometry.geoms)  # only use pixels within landplot
+
+        image = clipped_relief.read(1)
+        mask_background = self._select_image_background(image, **self._config['filter_background'])
         image_masked = np.where(mask_background, 0., image)
         image_binary = np.where(mask_background, image_masked, 1.)
 
-        self._LSD.set_binary_raster(image_binary.astype(np.uint8))
-        self._LSD.run(merge_lines=merge_lines)
+        self._LSD.process(image_binary.astype(np.uint8), merge_lines=merge_lines)
         line_segments = self._LSD.get_line_segments()
 
-        line_segments_geometry = utils.pixel_to_georef(line_segments, relief.transform.to_shapely())
+        line_segments_geometry = utils.pixel_to_georef(line_segments, clipped_relief.transform.to_shapely())
         return geopandas.GeoDataFrame(geometry=line_segments_geometry, crs=self._crs)
 
-    def _buffer_ditches(self, lines, plot=None, buffer_distance=30.):
-        if plot is None:
-            plot = self._plot
+    def _buffer_ditches(self, lines, landplot, buffer_distance=30.):
+        """
+        create a buffer polygon around the ditches within a landplot
+
+        Parameters
+        ----------
+        lines : geopandas.DataFrame
+            Georeferenced list of line segments representing ditches within the landplot
+        landplot : geopandas.DataFrame
+            Georeferenced list holding the landplot
+
+        Returns
+        -------
+        geopandas.DataFrame
+            Georeferenced list holding the buffer zone within the landplot
+        """
 
         buffer_gdf = lines.copy()  # Create a copy to store the buffer geometries
         buffer_gdf['geometry'] = lines.geometry.buffer(buffer_distance) # directly assign
         buffer_union_gdf = geopandas.GeoDataFrame(geometry=[buffer_gdf.union_all()], crs=self._crs)        
-        return geopandas.overlay(buffer_union_gdf, plot, how='intersection')
+        return geopandas.overlay(buffer_union_gdf, landplot, how='intersection')
 
     def _select_image_background(
         self, image, 
@@ -79,17 +162,18 @@ class HprDitchDetector():
         gaussian_sigma : Optional[float]=None
     ):
         """
-        estimated background value for every pixel in the image.
+        Estimate the background value for every pixel in the image.
+
 
         Parameters
         ----------
-        image : numpy.ndarray 
+        image : 2D numpy.ndarray 
             The input image (grayscale).
-        background_estimation_method : str, default='mean': 
+        background_estimation_method : str, default='mean' 
             The method used to estimate the background. Options are: 'mean', 'median', 'gaussian'.
         threshold : float, default=3.
             The number of standard deviations by which a pixel's value must differ from the 
-            background to be considered a high-value pixel.
+            background to be considered a high-value or low-value pixel.
         gaussian_sigma : float, optional, default=None: 
             The standard deviation for the Gaussian filter if 'gaussian' is chosen as the 
             background estimation method. If None, a reasonable value based on image size 
@@ -105,7 +189,7 @@ class HprDitchDetector():
             An image of the same shape as the input image holding
             the estimated background value for each pixel.
         """
-        
+
         image = np.asarray(image)
 
         # Grayscale image
@@ -130,3 +214,27 @@ class HprDitchDetector():
             return mask_background, background
         else:
             return mask_background
+
+    def adjust_config(self, adjust_config):
+        """
+        Adjust the set configuration.
+
+        Parameters
+        ----------
+        adjust_config : dict
+            Configuration that should be adjusted.
+
+        """
+        self._config = utils.merge_config(adjust_config, self._config)
+
+    def reset_config(self, new_config={}):
+        """
+        Reset the configuration to default except for the configuration given
+
+        Parameters
+        ----------
+        new_config : dict
+            Configuration that should be set differently from the default.
+
+        """
+        self._config = utils.merge_config(new_config, self._default_config)

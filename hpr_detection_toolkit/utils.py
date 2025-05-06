@@ -1,17 +1,14 @@
 #Standard libraries
-import math
-import os
 #Third party libraries
 import rasterio
 import rasterio.warp
 import rasterio.vrt
-import cv2
+import rasterio.mask
+import rasterio.io
 import numpy as np
-import cartopy.crs as ccrs
-from scipy.ndimage import gaussian_filter
 import geopandas
 import shapely
-from shapely.affinity import affine_transform
+import shapely.affinity
 from shapely import Point, LineString
 #Local applications
 
@@ -25,40 +22,13 @@ def open_raster_data(filename, target_crs=None):
     if target_crs is not None and raster.crs != target_crs:
         print(f"Reprojecting raster data to {target_crs}...")
         raster = rasterio.vrt.WarpedVRT(raster, crs=target_crs)
-        
-        """print(f"Reprojecting raster data to {target_crs}...")
-        
-        transform, width, height = rasterio.warp.calculate_default_transform(
-            raster.crs, target_crs, raster.width, raster.height, *raster.bounds
-        )
-        kwargs = raster.meta.copy()
-        kwargs.update({
-            'crs': target_crs,
-            'transform': transform,
-            'width': width,
-            'height': height
-        })
-        
-        filename_base, filename_ext = os.path.splitext(filename)
-        with rasterio.open(f'{filename_base}-reprojected{filename_ext}', 'w', **kwargs) as output_file:
-            for i in range(1, raster.count + 1):
-                rasterio.warp.reproject(
-                    source=rasterio.band(raster, i),
-                    destination=rasterio.band(output_file, i),
-                    src_transform=raster.transform,
-                    src_crs=raster.crs,
-                    dst_transform=transform,
-                    dst_crs=target_crs,
-                    resampling=rasterio.warp.Resampling.nearest  # Choose an appropriate resampling
-                )
-        raster.close()
-        raster = rasterio.open(f'{filename_base}-reprojected{filename_ext}')"""
         print(f"Raster CRS after reprojection: {raster.crs}")
 
     else:
         print("Raster data in original CRS.")
 
     return raster
+
 
 def print_raster_metadata(raster):
     print("-"*40)
@@ -73,10 +43,75 @@ def print_raster_metadata(raster):
     print(f"Geotransform:\n{raster.transform}")
     print("-"*40)
 
+
 def pixel_to_georef(geometry, transform_matrix):
     try:
-        return [affine_transform(geom, transform_matrix) for geom in geometry]
+        return [shapely.affinity.affine_transform(geom, transform_matrix) for geom in geometry]
     except TypeError:
         pass
     else:
-        return affine_transform(geometry, transform_matrix)
+        return shapely.affinity.affine_transform(geometry, transform_matrix)
+
+
+def merge_config(user_config, default_config):
+    """
+    Merge the user configuration dictionary with the default configuration dictionary recursively.
+
+    Parameters
+    ----------
+    user_config : dict
+        The user configuration dictionary.
+    default_config : dict
+        The default configuration dictionary.
+
+    Returns
+    -------
+    dict
+        The merged configuration dictionary.
+
+    """
+    if isinstance(user_config, dict) and isinstance(default_config, dict):
+        for key, default_value in default_config.items():
+            if key not in user_config:
+                user_config[key] = default_value
+            else:
+                user_config[key] = merge_config(user_config[key], default_value)
+    return user_config
+
+
+def clip_raster(raster, geoms):
+    """
+    Clip a raster image within a rasterio.DataReader object
+
+    Parameters
+    ----------
+    raster : rasterio.DataReader-like object
+        The original raster image including the metadata.
+    geoms : shapely geometry sequence
+        List holding the polygon(s) used as clipping mask
+
+    Returns
+    -------
+    clipped_raster : rasterio.DataReader-like object
+        The clipped raster image including the metadata.
+
+    """
+
+    # Select only the pixels from the relief map within the landplot
+    out_image, out_transform = rasterio.mask.mask(raster, geoms, crop=True)
+    out_meta = raster.meta.copy()
+    out_meta.update({
+        "driver": "GTiff",
+        "height": out_image.shape[1],
+        "width": out_image.shape[2],
+        "transform": out_transform,
+    })
+
+    # Make a rasterio.DataReader-like object to manipulate the clipped image
+    # without saving the clipped image to a temporary file and opening it
+    memfile = rasterio.io.MemoryFile()
+    with memfile.open(**out_meta) as dataset:  # Open memory-file in write modus
+            dataset.write(out_image)  # Write the NumPy array to the dataset
+    clipped_raster = memfile.open()  # Open memory-file in read modus
+
+    return clipped_raster
