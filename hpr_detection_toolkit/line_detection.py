@@ -1,6 +1,8 @@
 #Standard libraries
+import os
 #Third party libraries
 import cv2
+import yaml
 import numpy as np
 from shapely import Point, LineString
 #Local applications
@@ -202,15 +204,9 @@ class LineSegmentDetector():
             for key words present in the config file.
         """
 
-        self.__default_config = {'rho_tolerance': 10.,
-                                 'theta_tolerance': np.deg2rad(5.),
-                                 'Hough lines': {'rho_resolution': 1,
-                                                 'theta_resolution': np.deg2rad(.1),
-                                                 'threshold': 30, 
-                                                 'minLineLength': 50., 
-                                                 'maxLineGap': 30.,
-                                                }
-                                }
+        module_directory = os.path.dirname(os.path.abspath(__file__))
+        config_filename = os.path.join(module_directory, 'config_default.yaml')
+        self.__default_config = yaml.safe_load(open(config_filename,'r'))['line_segment_detection']
         self._config = utils.merge_config(config, self.__default_config)
 
     def process(self, binary_image, merge_lines=False):
@@ -235,7 +231,7 @@ class LineSegmentDetector():
             raise TypeError('The dtype of the binary image should be numpy.uint8')
 
         HLP_config = self._config['Hough lines']
-        line_segments = cv2.HoughLinesP(binary_image, HLP_config['rho_resolution'], HLP_config['theta_resolution'],
+        line_segments = cv2.HoughLinesP(binary_image, HLP_config['rho_resolution'], np.deg2rad(HLP_config['theta_resolution']),
             threshold=HLP_config['threshold'], minLineLength=HLP_config['minLineLength'], maxLineGap=HLP_config['maxLineGap'])
         
         line_segments = line_segments[:,0,:]  # remove unused dimension in numpy array
@@ -243,7 +239,7 @@ class LineSegmentDetector():
         line_segments = [LineString(line_segment) for line_segment in line_segments]  # convert into list holding LineString objects
 
         if merge_lines:
-            line_segments = self._merge_similar_line_segments(line_segments, self._config['rho_tolerance'], self._config['theta_tolerance'])
+            line_segments = self._merge_similar_line_segments(line_segments, self._config['rho_tolerance'], np.deg2rad(self._config['theta_tolerance']))
 
         self._line_segments = line_segments
 

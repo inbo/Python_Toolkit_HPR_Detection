@@ -1,6 +1,8 @@
 #Standard libraries
+import os
 from typing import Optional
 #Third party libraries
+import yaml
 import numpy as np
 import geopandas
 import shapely
@@ -31,15 +33,9 @@ class HprDitchDetector():
         self._relief = relief
         self._crs = relief.crs
 
-        self.__default_config = {'merge_lines': False,
-                                 'filter_background': {'threshold_factor': 3.,
-                                                       'background_estimation_method': 'median',
-                                                       'include_high': False, 
-                                                       'include_low': True, 
-                                                       'gaussian_sigma': None,
-                                                       },
-                                 'buffer_zone': {'buffer_distance': 30.}
-                                }
+        module_directory = os.path.dirname(os.path.abspath(__file__))
+        config_filename = os.path.join(module_directory, 'config_default.yaml')
+        self.__default_config = yaml.safe_load(open(config_filename,'r'))['hpr_ditch_detection']
         self._config = utils.merge_config(config, self.__default_config)
 
     def process(self, landplot):
@@ -130,7 +126,7 @@ class HprDitchDetector():
         line_segments_geometry = utils.pixel_to_georef(line_segments, clipped_relief.transform.to_shapely())
         return geopandas.GeoDataFrame(geometry=line_segments_geometry, crs=self._crs)
 
-    def _buffer_ditches(self, lines, landplot, buffer_distance=30.):
+    def _buffer_ditches(self, lines, landplot, distance):
         """
         create a buffer polygon around the ditches within a landplot
 
@@ -140,6 +136,8 @@ class HprDitchDetector():
             Georeferenced list of line segments representing ditches within the landplot
         landplot : geopandas.DataFrame
             Georeferenced list holding the landplot
+        distance : float
+            Buffer distance around the line in units of crs
 
         Returns
         -------
@@ -148,7 +146,7 @@ class HprDitchDetector():
         """
 
         buffer_gdf = lines.copy()  # Create a copy to store the buffer geometries
-        buffer_gdf['geometry'] = lines.geometry.buffer(buffer_distance) # directly assign
+        buffer_gdf['geometry'] = lines.geometry.buffer(distance) # directly assign
         buffer_union_gdf = geopandas.GeoDataFrame(geometry=[buffer_gdf.union_all()], crs=self._crs)        
         return geopandas.overlay(buffer_union_gdf, landplot, how='intersection')
 
