@@ -15,7 +15,7 @@ from . import utils
 class HprDitchDetector():
     """ Detect linear structures in a raster map 
     based on microrelief within a plot of land """
-    def __init__(self, relief, config={}):
+    def __init__(self, relief, line_segment_detector, config={}):
         """
         Attributes
         ----------
@@ -29,7 +29,7 @@ class HprDitchDetector():
             Otherwise the default configuration is overwritten
             for key words present in the user's configuration.
         """
-        self._LSD = LineSegmentDetector()
+        self._LSD = line_segment_detector
         self._relief = relief
         self._crs = relief.crs
 
