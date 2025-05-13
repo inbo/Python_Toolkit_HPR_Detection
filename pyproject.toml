@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hpr_detection_toolkit"
+version = "0.1.0"
+authors = [
+    {name="Bob Oeyen", email="hello@boboeyen.be"},
+]
+description = "A Monte Carlo simulation package for radio neutrino detectors and reconstruction framework for radio detectors of high-energy neutrinos and cosmic-rays."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+# homepage = "https://github.com/nu-radio/NuRadioMC"
+# documentation = "https://nu-radio.github.io/NuRadioMC/main.html"
+
+dependencies = [ # Your project's runtime dependencies
+    "affine>=2.3.1",
+    "geopandas>=1.0.1",
+    "fiona",
+    "jupyter",
+    "numpy>=2.2.0",
+    "matplotlib",
+    "opencv-python",
+    "pandas",
+    "pyyaml",
+    "rasterio",
+    "scipy",
+    "shapely",
+    "tqdm"
+]
+
+[tool.setuptools]
+packages = ["hpr_detection_toolkit"]
