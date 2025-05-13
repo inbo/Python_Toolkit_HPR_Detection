@@ -87,4 +87,3 @@ temp/
 tmp/
 plot/
 *.ipynb_checkpoints/
-example_notebooks/DetectionMicrorelief_KB20_v1.gpkg
