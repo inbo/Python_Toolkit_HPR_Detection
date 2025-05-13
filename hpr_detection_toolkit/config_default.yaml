@@ -2,9 +2,8 @@ hpr_ditch_detection:
     merge_lines: False
     filter_background: 
         threshold_factor: 3.  # number of sigmas to reject it as background
+        threshold_value: .5
         background_estimation_method: median
-        include_high: False
-        include_low: True
         gaussian_sigma: null
     buffer_zone: 
         distance: 30.  # distance around a line segment to buffer (in units of Coordinate Reference System)
