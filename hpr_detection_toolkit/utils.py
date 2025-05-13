@@ -13,20 +13,32 @@ from shapely import Point, LineString
 #Local applications
 
 
-def open_raster_data(filename, target_crs=None):
-    try:
-        raster = rasterio.open(filename)
-    except rasterio.RasterioIOError:
-        raise IOError("Error: Could not open or read the TIF image.")
-
-    if target_crs is not None and raster.crs != target_crs:
-        print(f"Reprojecting raster data to {target_crs}...")
-        raster = rasterio.vrt.WarpedVRT(raster, crs=target_crs)
-        print(f"Raster CRS after reprojection: {raster.crs}")
-
+def open_vector_data(filename, layer, target_crs=None):
+    vector = geopandas.read_file(filename, layer=layer)
+    if vector.crs is None:
+        print(f"Vector data in {filename} has no crs information.")
+        print(f"> Using original data asuming crs is {target_crs}.")
+        vector.set_crs(target_crs)
+    elif target_crs is not None and vector.crs != target_crs:
+        print(f"Vector data in {filename} in {vector.crs}.")
+        vector = vector.to_crs(target_crs)
+        print(f"> Reprojected vector data to {target_crs}.")
     else:
-        print("Raster data in original CRS.")
+        print(f"Vector data in {filename} in {vector.crs}, no reprojection.")
+    return vector
 
+
+def open_raster_data(filename, layer=None, target_crs=None):
+    if layer is not None and filename[-5:] == '.gpkg':
+        filename = f'GPKG:{filename}:{layer}'
+        
+    raster = rasterio.open(filename)
+    if target_crs is not None and raster.crs != target_crs:
+        print(f"Raster data in {filename} in {raster.crs}.")
+        raster = rasterio.vrt.WarpedVRT(raster, crs=target_crs)
+        print(f"Reprojected raster data to {target_crs}.")
+    else:
+        print(f"Raster data in {filename} in {raster.crs}, no reprojection.")
     return raster
 
 
