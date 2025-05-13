@@ -227,6 +227,8 @@ class LineSegmentDetector():
             detected line segments in vector format 
         """
 
+        self._line_segments = None
+        
         if binary_image.dtype != np.uint8:
             raise TypeError('The dtype of the binary image should be numpy.uint8')
 
@@ -234,14 +236,15 @@ class LineSegmentDetector():
         line_segments = cv2.HoughLinesP(binary_image, HLP_config['rho_resolution'], np.deg2rad(HLP_config['theta_resolution']),
             threshold=HLP_config['threshold'], minLineLength=HLP_config['minLineLength'], maxLineGap=HLP_config['maxLineGap'])
         
-        line_segments = line_segments[:,0,:]  # remove unused dimension in numpy array
-        line_segments = np.reshape(line_segments, (len(line_segments),len(line_segments[0])//2,2))  # extra dimention to represent point as [x, y]
-        line_segments = [LineString(line_segment) for line_segment in line_segments]  # convert into list holding LineString objects
+        if line_segments is not None:
+            line_segments = line_segments[:,0,:]  # remove unused dimension in numpy array
+            line_segments = np.reshape(line_segments, (len(line_segments),len(line_segments[0])//2,2))  # extra dimention to represent point as [x, y]
+            line_segments = [LineString(line_segment) for line_segment in line_segments]  # convert into list holding LineString objects
 
-        if merge_lines:
-            line_segments = self._merge_similar_line_segments(line_segments, self._config['rho_tolerance'], np.deg2rad(self._config['theta_tolerance']))
+            if merge_lines:
+                line_segments = self._merge_similar_line_segments(line_segments, self._config['rho_tolerance'], np.deg2rad(self._config['theta_tolerance']))
 
-        self._line_segments = line_segments
+            self._line_segments = line_segments
 
     def get_line_segments(self):
         """
