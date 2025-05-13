@@ -56,7 +56,8 @@ class HprDitchDetector():
         # Perform necessary processes
         self._ditches = self._detect_ditches_in_plot(landplot, relief=self._relief, merge_lines=self._config['merge_lines'])
         self._buffer_zone = self._buffer_ditches(self._ditches, landplot, **self._config['buffer_zone'])
-        self._hpr_fraction = self._buffer_zone.iloc[0].geometry.area / landplot.iloc[0].geometry.area
+        if len(self._buffer_zone) > 0:
+            self._hpr_fraction = self._buffer_zone.iloc[0].geometry.area / landplot.iloc[0].geometry.area
 
     def get_hpr_fraction(self):
         """
@@ -76,7 +77,7 @@ class HprDitchDetector():
         -------
         ditches : list of shapely.LineString
         """
-        if not multilinestring:
+        if not multilinestring or self._ditches is None:
             return self._ditches
         else:
             return geopandas.GeoDataFrame(geometry=[shapely.MultiLineString(list(self._ditches.geometry))], crs=self._crs)
@@ -123,8 +124,11 @@ class HprDitchDetector():
         self._LSD.process(image_binary.astype(np.uint8), merge_lines=merge_lines)
         line_segments = self._LSD.get_line_segments()
 
-        line_segments_geometry = utils.pixel_to_georef(line_segments, clipped_relief.transform.to_shapely())
-        return geopandas.GeoDataFrame(geometry=line_segments_geometry, crs=self._crs)
+        if line_segments is not None:
+            line_segments_geometry = utils.pixel_to_georef(line_segments, clipped_relief.transform.to_shapely())
+            return geopandas.GeoDataFrame(geometry=line_segments_geometry, crs=self._crs)
+        else:
+            return geopandas.GeoDataFrame(columns=['geometry'], crs=self._crs)
 
     def _buffer_ditches(self, lines, landplot, distance):
         """
