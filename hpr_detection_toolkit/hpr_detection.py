@@ -157,9 +157,8 @@ class HprDitchDetector():
     def _select_image_background(
         self, image, 
         background_estimation_method : str='median', 
-        threshold_factor : float=3., 
-        include_high : bool=True, 
-        include_low : bool=True, 
+        threshold_factor : float=1., 
+        threshold_value : float=0.,
         return_background_estimate : bool=False,
         gaussian_sigma : Optional[float]=None
     ):
@@ -173,9 +172,11 @@ class HprDitchDetector():
             The input image (grayscale).
         background_estimation_method : str, default='mean' 
             The method used to estimate the background. Options are: 'mean', 'median', 'gaussian'.
-        threshold : float, default=3.
+        threshold_factor : float, default=1.
             The number of standard deviations by which a pixel's value must differ from the 
-            background to be considered a high-value or low-value pixel.
+            background to be considered a high-value pixel.
+        threshold_value : float, default=0.
+            The minimal value of a pixel's value to be considered a high-value or low-value pixel.
         gaussian_sigma : float, optional, default=None: 
             The standard deviation for the Gaussian filter if 'gaussian' is chosen as the 
             background estimation method. If None, a reasonable value based on image size 
@@ -207,10 +208,7 @@ class HprDitchDetector():
             raise ValueError(f"Invalid background_estimation_method: {background_estimation_method}")
 
         standard_deviation = np.std(image - background, mean=0.)
-        high_value_mask = (image > (background + threshold_factor * standard_deviation))
-        low_value_mask = (image < (background - threshold_factor * standard_deviation))
-        
-        mask_background = ~((high_value_mask & include_high) | (low_value_mask & include_low))
+        mask_background = ~((image > (background + threshold_factor * standard_deviation)) & (image > threshold_value))
 
         if return_background_estimate:
             return mask_background, background
