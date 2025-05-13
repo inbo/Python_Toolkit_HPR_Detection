@@ -86,3 +86,4 @@ Thumbs.db
 temp/
 tmp/
 plot/
+*.ipynb_checkpoints/
