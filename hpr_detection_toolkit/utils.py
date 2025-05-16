@@ -14,6 +14,27 @@ from shapely import Point, LineString
 
 
 def open_vector_data(filename, layer, target_crs=None):
+    """
+    Open a layer within a geopackage/geodatabase file that is a vector data set.
+    If the target_crs does not match the original crs of the data, the data is
+    reprojected on the fly.
+
+    Parameters
+    ----------
+    filename : str
+        Absolute path to the file
+    layer : str
+        Exact name of the layer to import
+    target_crs : str (in right format), default=None
+        The identifier of the Coordinate Reference System you
+        want to work in. If None, the original CRS is used
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Vector data set in a GeoDataFrame
+
+    """
     vector = geopandas.read_file(filename, layer=layer)
     if vector.crs is None:
         print(f"Vector data in {filename} has no crs information.")
@@ -29,6 +50,27 @@ def open_vector_data(filename, layer, target_crs=None):
 
 
 def open_raster_data(filename, layer=None, target_crs=None):
+    """
+    Open a georeferences raster image file or a  layer within a geopackage/geodatabase file 
+    that is a raster data set. If the target_crs does not match the original crs of the data, 
+    the data is reprojected on the fly.
+
+    Parameters
+    ----------
+    filename : str
+        Absolute path to the file
+    layer : str
+        Exact name of the layer to import if needed
+    target_crs : str (in right format), default=None
+        The identifier of the Coordinate Reference System you
+        want to work in. If None, the original CRS is used
+
+    Returns
+    -------
+    rasterio.DataReader
+        Raster data set represented by DataReader object
+
+    """
     if layer is not None and filename[-5:] == '.gpkg':
         filename = f'GPKG:{filename}:{layer}'
         
@@ -43,6 +85,15 @@ def open_raster_data(filename, layer=None, target_crs=None):
 
 
 def print_raster_metadata(raster):
+    """
+    Print the meta data of a georeferenced raster image
+
+    Parameters
+    ----------
+    raster : rasterio.DataReader-like object
+        Georeferenced raster data opened by rasterio
+
+    """
     print("-"*40)
     print(f"METADATA - {raster.name}")
     print("-"*40)
@@ -57,6 +108,26 @@ def print_raster_metadata(raster):
 
 
 def pixel_to_georef(geometry, transform_matrix):
+    """
+    Transform Shapely geometries from pixel to georeferenced coordinates.
+
+    Parameters
+    ----------
+    geometry : Shapely geometry (Polygon, LineString ...) or a list of Shapely geometries
+        Geometries in pixel coordinates
+    transform_matrix : List of length 6 or 12
+        Parameters for a affine transformation (6 for 2D and 12 for 3D). More information
+        at https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform
+    target_crs : str (in right format), default=None
+        The identifier of the Coordinate Reference System you
+        want to work in. If None, the original CRS is used
+
+    Returns
+    -------
+    Shapely geometry (Polygon, LineString ...) or a list of Shapely geometries
+        Geometries in georeferenced coordinates
+
+    """
     try:
         return [shapely.affinity.affine_transform(geom, transform_matrix) for geom in geometry]
     except TypeError:
