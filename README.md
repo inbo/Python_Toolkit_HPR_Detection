@@ -1,24 +1,44 @@
-Your Python Package NameReplace YOUR_GITHUB_USERNAME, YOUR_REPO_NAME, and your_package_name in the badges and throughout this README.A concise, one-sentence description of your package and what it does.🌟 FeaturesFeature 1: Briefly explain a key feature.Feature 2: Briefly explain another key feature.Feature 3: ... and so on.🚀 InstallationThis project uses pyproject.toml for standard Python packaging, managed with setuptools. You can install it directly from this repository using pip in an editable mode, which is great for development.Prerequisites:Python 3.8 or higher (check requires-python in your pyproject.toml)pip (usually comes with Python)gitSteps:Clone the Repository:git clone [https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git)
-cd YOUR_REPO_NAME
-Create and Activate a Virtual Environment:It's highly recommended to use a virtual environment to avoid conflicts with other projects.Using venv (Recommended, built-in):python -m venv .venv
-# On Linux/macOS:
-source .venv/bin/activate
-# On Windows (Cmd Prompt):
-.venv\Scripts\activate.bat
-# On Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-Using conda (If you use Anaconda/Miniconda):conda create -n your_package_env python=<compatible_python_version>
-conda activate your_package_env
-Replace <compatible_python_version> with a version compatible with your project (e.g., 3.9).Install the Package:With your virtual environment activated, install the package using pip. The -e . flag installs it in "editable" mode, meaning changes you make to the source code are immediately reflected without needing to reinstall. pip will read your pyproject.toml and install all necessary dependencies listed there.pip install -e .
-Verify Installation (Optional):You can check if the package and its dependencies were installed correctly:pip list
-You should see your_package_name listed, pointing to your local source directory.✨ UsageProvide simple examples showing how to use your package.Example 1: Using the package in a Python script# my_script.py
-import your_package_name
+# Python HPR Detection Toolkit
+Toolkit to process grasslands and evaluating their biological value
 
-# Assuming your package has a function or class
-result = your_package_name.some_function(input_data)
-print(result)
-To run this script after installation:# Make sure your virtual environment is activated
-python my_script.py
-Example 2: Using a command-line script (if defined in pyproject.toml)If you defined command-line entry points in the [project.scripts] section of your pyproject.toml, explain how to use them.# Make sure your virtual environment is activated
-your-command --option value input_file
-Explain what the command does and its arguments/options.🤝 ContributingWe welcome contributions! If you'd like to contribute, please follow these steps:Fork the repository.Create a new branch (git checkout -b feature/your-feature-name).Make your changes.Write tests for your changes.Ensure your code passes linting and tests.Commit your changes (git commit -m 'feat: Add some feature').Push to the branch (git push origin feature/your-feature-name).Create a Pull Request explaining your changes.Please see CONTRIBUTING.md (if you have one) for more details.📄 LicenseThis project is licensed under the [Your License Name] - see the LICENSE file for details.udosAcknowledge anyone who helped you or projects you used.Note: Remember to replace all placeholder text like YOUR_GITHUB_USERNAME, YOUR_REPO_NAME, your_package_name, descriptions
+## About
+This package gives the necessary handles to automate the detection of unknown hpr(+) grasslands in Flanders. The packages holds different modules that can process landplots and availble data (like raster maps of height) to evaluate the presence of certain structures within the grassland that are indicative for an old/valuable grassland. The package does select which grasslands need to be inspected but only processes the given landplot. However, in the examples, more elaborate analyses workflows are included.
+
+## Features
+At the moment only one type of hpr grassland is included:
+* Grasslands holding ditches
+
+## Installing the package
+To make sure all dependancies for the package are correct, we will work in a Virtual Environment: It's highly recommended to use a virtual environment to avoid conflicts with other projects. Here we give the instruction to do so using (mini)conda.
+
+1. **Open a (anaconda) terminal**
+
+2. **Navigate to the directory of this package**
+```bash
+cd /path/to/package/directory
+```
+
+3. **Create and activate new conda environment**  
+Check if the python version is declared correct (see `pyproject.toml`) and change if needed. Make sure to include pip in the creation of the environment! You can change the name of the new environment from `INBO_microrelief`to something of your liking.
+```bash
+conda create -n INBO_microrelief python>=3.10 pip
+conda activate INBO_microrelief
+```
+
+4. **Install the dependancies using pip**  
+Pip will search automatically for dependancies declared in the `pyproject.toml` file and install the necessary packages. Make sure to run pip with the `-e` flag. This makes the project editable and ensure default config file are found correctly.
+```bash
+pip install -e .
+```
+
+5. **Verify Installation** (Optional)  
+You can check if the package and its dependencies were installed correctly
+```bash
+pip list
+```
+You should see `hpr_detection_toolkit` listed, pointing to your local source directory. 
+
+## Usage
+In the folder `example_notebooks` some examples of the functionality of this package are found. They use large data files such as the BWK, agriculture landusage ... Make sure to download these and point the examples to the right location using absolute paths. Some notebooks also use data that is shipped with this package. 
+
+Do not overwrite the example files or upload new data or processed data files!
