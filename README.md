@@ -13,25 +13,32 @@ To make sure all dependancies for the package are correct, we will work in a Vir
 
 1. **Open a (anaconda) terminal**
 
-2. **Navigate to the directory of this package**
-```bash
-cd /path/to/package/directory
-```
-
-3. **Create and activate new conda environment**  
+2. **Create and activate new conda environment**  
 Check if the python version is declared correct (see `pyproject.toml`) and change if needed. Make sure to include pip in the creation of the environment! You can change the name of the new environment from `INBO_microrelief`to something of your liking.
 ```bash
 conda create -n INBO_microrelief python>=3.10 pip
 conda activate INBO_microrelief
 ```
 
-4. **Install the dependancies using pip**  
-Pip will search automatically for dependancies declared in the `pyproject.toml` file and install the necessary packages. Make sure to run pip with the `-e` flag. This makes the project editable and ensure default config file are found correctly.
+3. **Navigate to the package directory**
+```bash
+cd /path/to/package/directory
+```
+
+4. **Checkout the Git repository**
+Clone the remote git repository into the package directory you navigated to. This will create a local mirror of the repository. After cloning it, go into the repository
+```bash
+git clone git@github.com:inbo/Python_Toolkit_HPR_Detection.git
+cd Python_Toolkit_HPR_Detection
+```
+
+5. **Install the package and dependancies**  
+Pip stands for Package Installer for Python. It allows you to easily install, upgrade and manage Python packages. When installing this package, pip will search automatically for dependancies declared in the `pyproject.toml` file and install the necessary packages. Make sure to run pip with the `-e` flag. This makes the project editable and ensure the default config files are found correctly.
 ```bash
 pip install -e .
 ```
 
-5. **Verify Installation** (Optional)  
+6. **Verify Installation** (Optional)  
 You can check if the package and its dependencies were installed correctly
 ```bash
 pip list
