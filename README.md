@@ -14,7 +14,7 @@ To make sure all dependancies for the package are correct, we will work in a Vir
 1. **Open a (anaconda) terminal**
 
 2. **Create and activate new conda environment**  
-Check if the python version is declared correct (see `pyproject.toml`) and change if needed. Make sure to include pip in the creation of the environment! You can change the name of the new environment from `INBO_microrelief`to something of your liking.
+Check if the python version is declared correctly (see `pyproject.toml`) and change if needed. Make sure to include pip in the creation of the environment! You can change the name of the new environment from `INBO_microrelief`to something of your liking.
 ```bash
 conda create -n INBO_microrelief python>=3.10 pip
 conda activate INBO_microrelief
@@ -25,7 +25,7 @@ conda activate INBO_microrelief
 cd /path/to/package/directory
 ```
 
-4. **Checkout the Git repository**
+4. **Checkout the Git repository**  
 Clone the remote git repository into the package directory you navigated to. This will create a local mirror of the repository. After cloning it, go into the repository
 ```bash
 git clone git@github.com:inbo/Python_Toolkit_HPR_Detection.git
