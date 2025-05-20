@@ -53,6 +53,11 @@ pip list
 You should see `hpr_detection_toolkit` listed, pointing to your local source directory. 
 
 ## Usage
-In the folder `example_notebooks` some examples of the functionality of this package are found. They use large data files such as the BWK, agriculture landusage ... Make sure to download these and point the examples to the right location using absolute paths. Some notebooks also use data that is shipped with this package. 
+In the folder `example_notebooks` some examples of the functionality of this package are found. They use large data files such as the BWK, agriculture landusage ... Make sure to download these data sets and point the examples to the right location using absolute paths. Some notebooks also use data that is shipped with this package. 
 
 Do not overwrite the example files or upload new data or processed data files!
+
+To open the notebooks, run the following command in the directory `/path/to/package/directory/Python_Toolkit_HPR_Detection`
+```bash
+jupyter notebook
+```
