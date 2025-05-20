@@ -12,6 +12,7 @@ At the moment only one type of hpr grassland is included:
 To make sure all dependancies for the package are correct, we will work in a Virtual Environment: It's highly recommended to use a virtual environment to avoid conflicts with other projects. Here we give the instruction to do so using (mini)conda.
 
 1. **Open a (anaconda) terminal**
+To interat with anaconde, start anaconda in a terminal. For Windows you best open a anaconda powershell.
 
 2. **Create and activate new conda environment**  
 Check if the python version is declared correctly (see `pyproject.toml`) and change if needed. Make sure to include pip in the creation of the environment! You can change the name of the new environment from `INBO_microrelief`to something of your liking.
@@ -21,12 +22,14 @@ conda activate INBO_microrelief
 ```
 
 3. **Navigate to the package directory**
+Create a folder in which you want to download, run and modify the project. You can do this through your file explorer or using `mkdir` in the terminal. Next navigate in the anaconda terminal to this folder.
 ```bash
 cd /path/to/package/directory
 ```
 
 4. **Checkout the Git repository**  
-Clone the remote git repository into the package directory you navigated to. This will create a local mirror of the repository. Depending on whether you have set-up ssh or not you can use https or ssh.
+Clone the remote git repository into the package directory you navigated to. This will create a local mirror of the repository. Depending on your git set-up you can use https or ssh in case you have a working ssh-key. 
+> If you only want to clone and use this packages, both option are fine. However, when you want to contribute to the repository, make sure you have the rights and consult the Github documentation to set-up the connection on your pc.
 ```bash
 git clone https://github.com/inbo/Python_Toolkit_HPR_Detection.git
 ```
