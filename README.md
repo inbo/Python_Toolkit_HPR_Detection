@@ -26,9 +26,16 @@ cd /path/to/package/directory
 ```
 
 4. **Checkout the Git repository**  
-Clone the remote git repository into the package directory you navigated to. This will create a local mirror of the repository. After cloning it, go into the repository
+Clone the remote git repository into the package directory you navigated to. This will create a local mirror of the repository. Depending on whether you have set-up ssh or not you can use https or ssh.
+```bash
+git clone https://github.com/inbo/Python_Toolkit_HPR_Detection.git
+```
+OR
 ```bash
 git clone git@github.com:inbo/Python_Toolkit_HPR_Detection.git
+```
+After cloning it, go into the repository
+```bash
 cd Python_Toolkit_HPR_Detection
 ```
 
